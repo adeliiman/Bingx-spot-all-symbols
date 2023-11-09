@@ -118,3 +118,17 @@ class ReportView(BaseView):
 
 
 
+
+class AllSymbols(Base):
+    __tablename__ = "all_symbols"
+    id = Column(Integer,primary_key=True)
+    symbol = Column(String)
+
+class AllSymbolAdmin(ModelView, model=AllSymbols):
+    column_list = [AllSymbols.id, AllSymbols.symbol]
+    column_searchable_list = [AllSymbols.symbol]
+    column_sortable_list = [AllSymbols.symbol]
+    name = "symbol"
+    name_plural = "All Symbols"
+    icon = "fa-sharp fa-solid fa-bitcoin-sign"
+    

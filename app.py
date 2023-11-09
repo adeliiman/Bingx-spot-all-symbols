@@ -1,7 +1,8 @@
-from fastapi import FastAPI 
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
 from starlette.background import BackgroundTasks
 import uvicorn
-from models import  SettingAdmin, SignalAdmin, SymbolAdmin, ReportView
+from models import  SettingAdmin, SignalAdmin, SymbolAdmin, ReportView, AllSymbols, AllSymbolAdmin
 from database import engine, Base
 from database import get_db
 from sqladmin import Admin
@@ -18,6 +19,7 @@ Base.metadata.create_all(bind=engine)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_db()
+    yield
 
 app = FastAPI(lifespan=lifespan)
 admin = Admin(app, engine)
@@ -26,6 +28,7 @@ admin = Admin(app, engine)
 admin.add_view(SettingAdmin)
 admin.add_view(SignalAdmin)
 admin.add_view(SymbolAdmin)
+admin.add_view(AllSymbolAdmin)
 admin.add_view(ReportView)
 
 
@@ -52,6 +55,18 @@ def closeAll():
 @app.get('/')
 def index():
     return  RedirectResponse(url="/admin/home")
+
+@app.get('/load-symbols')
+def load_symbols(db: Session = Depends(get_db)):
+    symbols_list = Bingx.loadSymbols()
+    if not symbols_list: return None
+    for sym in symbols_list:
+        symbol_db = AllSymbols()
+        symbol_db.symbol = sym
+        db.add(symbol_db)
+        db.commit()
+        db.close()
+    print('All Symbols Add.')
 
 
 if __name__ == '__main__':
