@@ -1,0 +1,5 @@
+Bingx.db
+Bingx.log
+__pycache__
+config.json
+venv/

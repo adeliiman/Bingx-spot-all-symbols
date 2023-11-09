@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div>
+        <h1>Bingx Bot</h1> {{status}}
+    </div >
+    <div>
+        <a class="nav-link btn btn-outline-info"   href="/run" style="margin-left:auto;margin-right:auto;display:block;margin-top:2%;margin-bottom:0%;width:200px">Run Bot</a>
+    </div>
+    <div>
+        <a class="nav-link btn btn-outline-warning"   href="/stop" style="margin-left:auto;margin-right:auto;display:block;margin-top:0%;margin-bottom:0%;width:200px">Stop Bot</a>
+    </div>
+
+    <div >
+        <a class="nav-link btn btn-outline-danger"  href="/closeAll" style="margin-left:auto;margin-right:auto;display:block;margin-top:12%;margin-bottom:0%;width:200px">Close All Positions</a>
+    </div>
+{% endblock %}
