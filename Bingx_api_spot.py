@@ -93,9 +93,9 @@ class SpotAPI:
 
 # api = SpotAPI(config['api_secret'] , config['api_key'])
 
-# data = api.getSymbols(symbol="BTC-USDT")
-# # data = api.getKline(symbol="BTC-USDT", interval='1m')
-# # data = api.getBalance()
-# # data = api.newOrder(symbol="BTC-USDT", side='BUY', type_="LIMIT", quoteOrderQty=10, price=30000)
-# print(data)
+# # data = api.getSymbols(symbol="BTC-USDT")
+# data = api.getKline(symbol="BTC-USDT", interval='1m', limit=1)
+# # # data = api.getBalance()
+# # # data = api.newOrder(symbol="BTC-USDT", side='BUY', type_="LIMIT", quoteOrderQty=10, price=30000)
+# print(data['data'])
 
