@@ -23,8 +23,17 @@ api = SpotAPI(config['api_secret'] , config['api_key'])
 class Bingx:
 	bot: str = 'Stop' # 'Run'
 	kline: bool = False
-	symbols: list = []
+	user_symbols: list = []
+	All_symbols: list = []
+	ma1: int = 40
+	ma2: int = 60
+	ma3: int = 80
+	ma4: int = 100
+	chandelier_length: int = 22
+	chandelier_multi: int = 3
+	trade_value: int = 10
 	timeframe: str = '15min'
+
 
 
 
@@ -60,7 +69,7 @@ class Bingx:
 		data = data['symbols']
 		all_symbol = []
 		for d in data:
-			if d[-4:] == 'USDT':
+			if d['symbol'][-4:] == 'USDT' and d['symbol'][:4]!= "USDC":
 				all_symbol.append(d['symbol'])
 		return all_symbol
 

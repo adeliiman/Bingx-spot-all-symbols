@@ -1,4 +1,7 @@
 import pandas_ta as ta
+from sqlalchemy.orm import Session
+from models import Setting, Symbols, AllSymbols
+from main import Bingx
 
 
 def Ma_Ribbon(close, length1=40, length2=60, length3=80, length4=100):
@@ -59,3 +62,24 @@ def Chandelier_Exit(df, length=22, mult=3):
     
     del df
     return signal
+
+
+def get_user_params(db: Session):
+    user = db.query(Setting).first()
+    user_symbols = db.query(Symbols).all()
+    All_symbols = db.query(AllSymbols).all()
+
+    Bingx.ma1 = user.ma1
+    Bingx.ma2 = user.ma2
+    Bingx.ma3 = user.ma3
+    Bingx.ma4 = user.ma4
+    Bingx.chandelier_length = user.chandelier_length
+    Bingx.chandelier_multi = user.chandelier_multi
+    Bingx.trade_value = user.trade_value
+    Bingx.timeframe = user.timeframe
+    for sym in user_symbols:
+        Bingx.user_symbols.append(sym.symbol)
+
+    for sym in All_symbols:
+        Bingx.All_symbols.append(sym.symbol)
+

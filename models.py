@@ -11,15 +11,23 @@ class Setting(Base):
     __tablename__ = "setting"
     id = Column(Integer,primary_key=True)  
     timeframe = Column(String)
+    trade_value = Column(Integer)
+    ma1 = Column(Integer)
+    ma2 = Column(Integer)
+    ma3 = Column(Integer)
+    ma4 = Column(Integer)
+    chandelier_length = Column(Integer)
+    chandelier_multi = Column(Integer)
 
 
 class SettingAdmin(ModelView, model=Setting):
     #form_columns = [User.name]
-    column_list = [Setting.id, Setting.timeframe]
-    name = "Setting"
+    column_list = [Setting.id, Setting.timeframe, Setting.trade_value, Setting.ma1, Setting.ma2, Setting.ma3, Setting.ma4,
+                    Setting.chandelier_length, Setting.chandelier_multi]
+    name = "user setting"
     name_plural = "Setting"
     icon = "fa-solid fa-user"
-    form_args = dict(timeframe=dict(default="15min", choices=["15min", "1min", "5min", "1hour", "4hour"]), 
+    form_args = dict(timeframe=dict(default="15min", choices=["15min", "5min", "30min", "1hour", "4hour"]), 
                      )
     form_overrides =  dict(timeframe=wtforms.SelectField)
 
@@ -75,21 +83,9 @@ class Symbols(Base):
     __tablename__ = "symbols"
     id = Column(Integer,primary_key=True)
     symbol = Column(String)
-    fibo1 = Column(Float, default=1.1)
-    fibo2 = Column(Float, default=1.5)
-    fibo3 = Column(Float, default=1.75)
-    slLevel = Column(Float, default=2)
-    vol1 = Column(Integer, default=1)
-    vol2 = Column(Integer, default=2)
-    vol3 = Column(Integer, default=7)
-    leverage = Column(Integer, default=10)
-    marginMode = Column(String)
-    test = Column(String)
-
 
 class SymbolAdmin(ModelView, model=Symbols):
-    column_list = [Symbols.id, Symbols.symbol, Symbols.fibo1, Symbols.fibo2, Symbols.fibo3, Symbols.slLevel,
-                   Symbols.vol1, Symbols.vol2, Symbols.vol3, Symbols.leverage, Symbols.marginMode, Symbols.test]
+    column_list = [Symbols.id, Symbols.symbol]
     name = "Symbol"
     name_plural = "Symbol"
     icon = "fa-sharp fa-solid fa-bitcoin-sign"
@@ -97,14 +93,7 @@ class SymbolAdmin(ModelView, model=Symbols):
     form_args = dict(symbol=dict(validators=[wtforms.validators.regexp('.+[A-Z]-USDT')], label="symbol(BTC-USDT)"),
                      marginMode=dict(choices=["Isolated", "Cross"]))
     async def on_model_change(self, data, model, is_created):
-        print(is_created)
-        from database import SessionLocal
-        db = SessionLocal()
-        symbol = db.query(Symbols).order_by(Symbols.id.desc()).first()
-        symbol.test = "iman"
-        db.commit()
-
-
+        pass
 
 
 class ReportView(BaseView):

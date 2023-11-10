@@ -10,6 +10,7 @@ from setLogger import get_logger
 from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
 from main import Bingx
+from utils import get_user_params
 
 
 logger = get_logger(__name__)
@@ -33,11 +34,13 @@ admin.add_view(ReportView)
 
 
 @app.get('/run')
-async def run(tasks: BackgroundTasks):
+async def run(tasks: BackgroundTasks, db:Session =Depends(get_db)):
+    get_user_params(db)
     # tasks.add_task(handle_schedule)
     Bingx.bot = "Run"
     #await run_in_threadpool(handle_schedule)
     return  RedirectResponse(url="/admin/home")
+
 
 @app.get('/stop')
 def stop():
