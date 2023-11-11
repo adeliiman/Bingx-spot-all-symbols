@@ -28,7 +28,7 @@ class SettingAdmin(ModelView, model=Setting):
     name = "user setting"
     name_plural = "Setting"
     icon = "fa-solid fa-user"
-    form_args = dict(timeframe=dict(default="15min", choices=["15min", "5min", "30min", "1hour", "4hour"]), 
+    form_args = dict(timeframe=dict(default="15min", choices=["1min", "15min", "5min", "30min", "1hour", "4hour"]), 
                      use_all_symbols=dict(default="user_symbols", choices=["user_symbols", "All_symbols"]))
     form_overrides =  dict(timeframe=wtforms.SelectField, use_all_symbols=wtforms.SelectField)
 
@@ -88,7 +88,7 @@ class Symbols(Base):
 class SymbolAdmin(ModelView, model=Symbols):
     column_list = [Symbols.id, Symbols.symbol]
     name = "Symbol"
-    name_plural = "Symbol"
+    sname_plural = "user Symbol"
     icon = "fa-sharp fa-solid fa-bitcoin-sign"
     form_overrides = dict(symbol=wtforms.StringField, marginMode=wtforms.SelectField)
     form_args = dict(symbol=dict(validators=[wtforms.validators.regexp('.+[A-Z]-USDT')], label="symbol(BTC-USDT)"),

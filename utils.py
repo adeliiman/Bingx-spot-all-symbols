@@ -88,6 +88,7 @@ def get_user_params(db: Session):
         Bingx.chandelier_multi = user.chandelier_multi
         Bingx.trade_value = user.trade_value
         Bingx.timeframe = user.timeframe
+        Bingx.use_all_symbols = user.use_all_symbols
         for sym in user_symbols:
             Bingx.user_symbols.append(sym.symbol)
 

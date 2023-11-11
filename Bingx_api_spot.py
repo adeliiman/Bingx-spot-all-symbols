@@ -17,7 +17,7 @@ class SpotAPI:
 
     def send_request(self, method, path, urlpa, payload):
         url = "%s%s?%s&signature=%s" % (self.APIURL, path, urlpa, self.get_sign(self.SECRETKEY, urlpa))
-        print(url)
+        # print(url)
         headers = {
             'X-BX-APIKEY': self.APIKEY,
         }

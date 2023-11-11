@@ -25,7 +25,7 @@ api = SpotAPI(config['api_secret'] , config['api_key'])
 class Bingx:
 	bot: str = 'Stop' # 'Run'
 	kline: bool = False
-	use_all_symbols: bool = False
+	use_all_symbols: str = "user_symbols"
 	user_symbols: list = []
 	All_symbols: list = []
 	ma1: int = 40
@@ -80,7 +80,9 @@ class Bingx:
 Bingx = Bingx()
 
 
-def get_signal(symbol, interval):
+def get_signal(items):
+	symbol = items[0]
+	interval = items[1]
 	klines = Bingx._try(method="getKline", symbol=symbol, interval=interval, limit=110)
 	klines = klines[::-1][:-1] # last kline is not close
 	klines = pd.DataFrame(klines, columns=['time', 'open', 'high', 'low', 'close', 'Filled_price', 'close_time', 'vol'])
@@ -97,42 +99,47 @@ def get_signal(symbol, interval):
 		signal = "Buy"
 	elif signal_chandelier == "Sell" and klines['high'].values[-1] < ribbon[2]:
 		signal = "Sell"
-	
+	print(symbol, signal)
 	return signal
 
 
 def schedule_signal():
 
 	symbols = Bingx.user_symbols
-	if Bingx.use_all_symbols: 
-		symbols = Bingx.All_symbols
+	if Bingx.use_all_symbols == "All_symbols": 
+		symbols = Bingx.All_symbols[:10]
 
 	min_ = time.gmtime().tm_min
 
-	if Bingx.timeframe == "5min" and (min_ % 5 == 0):
+	if Bingx.timeframe == "1min":
 		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '5m', exchange, Xmin, Xmax) for sym in symbols]
-			executor.map(main_job, items)
-	
-	elif setting.timeframe == "15min" and (min_ % 15 == 0):
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '15m', exchange, Xmin, Xmax) for sym in symbols]
-			executor.map(main_job, items)
-	
-	elif setting.timeframe == "30min" and (min_ % 30 == 0):
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '30m', exchange, Xmin, Xmax) for sym in symbols]
-			executor.map(main_job, items)
+			items = [(sym, '1m') for sym in symbols]
+			executor.map(get_signal, items)
 
-	elif setting.timeframe == "1hour" and (min_ == 0):
+	elif Bingx.timeframe == "5min" and (min_ % 5 == 0):
 		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '1h', exchange, Xmin, Xmax) for sym in symbols]
-			executor.map(main_job, items)
+			items = [(sym, '5m') for sym in symbols]
+			executor.map(get_signal, items)
+	
+	elif Bingx.timeframe == "15min" and (min_ % 15 == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '15m') for sym in symbols]
+			executor.map(get_signal, items)
+	
+	elif Bingx.timeframe == "30min" and (min_ % 30 == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '30m') for sym in symbols]
+			executor.map(get_signal, items)
 
-	elif setting.timeframe == "4hour" and (min_ == 0):
+	elif Bingx.timeframe == "1hour" and (min_ == 0):
 		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '4h', exchange, Xmin, Xmax) for sym in symbols]
-			executor.map(main_job, items)
+			items = [(sym, '1h') for sym in symbols]
+			executor.map(get_signal, items)
+
+	elif Bingx.timeframe == "4hour" and (min_ == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '4h') for sym in symbols]
+			executor.map(get_signal, items)
 
 def main_job():
     schedule.every(1).minutes.at(":02").do(job_func=schedule_signal)
