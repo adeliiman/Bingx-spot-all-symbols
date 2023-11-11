@@ -93,9 +93,13 @@ class SpotAPI:
 
 # api = SpotAPI(config['api_secret'] , config['api_key'])
 
-# # data = api.getSymbols(symbol="BTC-USDT")
-# data = api.getKline(symbol="BTC-USDT", interval='1m', limit=1)
-# # # data = api.getBalance()
-# # # data = api.newOrder(symbol="BTC-USDT", side='BUY', type_="LIMIT", quoteOrderQty=10, price=30000)
-# print(data['data'])
-
+# # # data = api.getSymbols(symbol="BTC-USDT")
+# data = api.getKline(symbol="BTC-USDT", interval='1m', limit=5)
+# # # # data = api.getBalance()
+# # # # data = api.newOrder(symbol="BTC-USDT", side='BUY', type_="LIMIT", quoteOrderQty=10, price=30000)
+# # print(data['data'])
+# import pandas as pd
+# klines = pd.DataFrame(data['data'][::-1][:-1], columns=['time', 'open', 'high', 'low', 'close', 'Filled_price', 'close_time', 'vol'])
+# klines = klines[['time', 'open', 'high', 'low', 'close']]
+# klines['time'] = pd.to_datetime(klines['time']*1000000)
+# print(klines)

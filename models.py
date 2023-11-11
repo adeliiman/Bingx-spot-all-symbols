@@ -18,18 +18,19 @@ class Setting(Base):
     ma4 = Column(Integer)
     chandelier_length = Column(Integer)
     chandelier_multi = Column(Integer)
+    use_all_symbols = Column(String)
 
 
 class SettingAdmin(ModelView, model=Setting):
     #form_columns = [User.name]
     column_list = [Setting.id, Setting.timeframe, Setting.trade_value, Setting.ma1, Setting.ma2, Setting.ma3, Setting.ma4,
-                    Setting.chandelier_length, Setting.chandelier_multi]
+                    Setting.chandelier_length, Setting.chandelier_multi, Setting.use_all_symbols]
     name = "user setting"
     name_plural = "Setting"
     icon = "fa-solid fa-user"
     form_args = dict(timeframe=dict(default="15min", choices=["15min", "5min", "30min", "1hour", "4hour"]), 
-                     )
-    form_overrides =  dict(timeframe=wtforms.SelectField)
+                     use_all_symbols=dict(default="user_symbols", choices=["user_symbols", "All_symbols"]))
+    form_overrides =  dict(timeframe=wtforms.SelectField, use_all_symbols=wtforms.SelectField)
 
     async def on_model_change(self, data, model, is_created):
         # Perform some other action

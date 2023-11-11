@@ -3,3 +3,4 @@ Bingx.log
 __pycache__
 config.json
 venv/
+Bingx.log.*

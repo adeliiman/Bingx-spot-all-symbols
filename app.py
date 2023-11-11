@@ -36,6 +36,8 @@ admin.add_view(ReportView)
 @app.get('/run')
 async def run(tasks: BackgroundTasks, db:Session =Depends(get_db)):
     get_user_params(db)
+    from main import get_signal
+    get_signal(symbol="BTC-USDT", interval='1m')
     # tasks.add_task(handle_schedule)
     Bingx.bot = "Run"
     #await run_in_threadpool(handle_schedule)

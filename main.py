@@ -6,6 +6,8 @@ from models import Signal, Setting, Symbols
 from Bingx_api_spot import SpotAPI
 import concurrent.futures
 from database import SessionLocal
+import schedule
+from utils import Ma_Ribbon, Chandelier_Exit
 
 
 from setLogger import get_logger
@@ -23,6 +25,7 @@ api = SpotAPI(config['api_secret'] , config['api_key'])
 class Bingx:
 	bot: str = 'Stop' # 'Run'
 	kline: bool = False
+	use_all_symbols: bool = False
 	user_symbols: list = []
 	All_symbols: list = []
 	ma1: int = 40
@@ -33,8 +36,6 @@ class Bingx:
 	chandelier_multi: int = 3
 	trade_value: int = 10
 	timeframe: str = '15min'
-
-
 
 
 	def _getInterval(self, interval):
@@ -54,6 +55,8 @@ class Bingx:
 		try:
 			if method == 'getSymbols':
 				res = api.getSymbols()
+			elif method == 'getKline':
+				res = api.getKline(symbol=kwargs.get('symbol'), interval=kwargs.get('interval'), limit=kwargs.get('limit'))
 
 			if res and res['code']:
 				logger.debug(f'un-success---{method}', exc_info=True) 
@@ -76,3 +79,69 @@ class Bingx:
 	
 Bingx = Bingx()
 
+
+def get_signal(symbol, interval):
+	klines = Bingx._try(method="getKline", symbol=symbol, interval=interval, limit=110)
+	klines = klines[::-1][:-1] # last kline is not close
+	klines = pd.DataFrame(klines, columns=['time', 'open', 'high', 'low', 'close', 'Filled_price', 'close_time', 'vol'])
+	klines['time'] = pd.to_datetime(klines['time']*1000000)
+	klines = klines[['time', 'open', 'high', 'low', 'close']] # last row is last kline
+	#
+	signal_ribbon = Ma_Ribbon(klines['close'])
+	signal_chandelier = Chandelier_Exit(df=klines)
+
+	signal = None
+	ribbon = signal_ribbon[1:]
+	ribbon.sort()
+	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy":
+		signal = "Buy"
+	elif signal_chandelier == "Sell" and klines['high'].values[-1] < ribbon[2]:
+		signal = "Sell"
+	
+	return signal
+
+
+def schedule_signal():
+
+	symbols = Bingx.user_symbols
+	if Bingx.use_all_symbols: 
+		symbols = Bingx.All_symbols
+
+	min_ = time.gmtime().tm_min
+
+	if Bingx.timeframe == "5min" and (min_ % 5 == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '5m', exchange, Xmin, Xmax) for sym in symbols]
+			executor.map(main_job, items)
+	
+	elif setting.timeframe == "15min" and (min_ % 15 == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '15m', exchange, Xmin, Xmax) for sym in symbols]
+			executor.map(main_job, items)
+	
+	elif setting.timeframe == "30min" and (min_ % 30 == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '30m', exchange, Xmin, Xmax) for sym in symbols]
+			executor.map(main_job, items)
+
+	elif setting.timeframe == "1hour" and (min_ == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '1h', exchange, Xmin, Xmax) for sym in symbols]
+			executor.map(main_job, items)
+
+	elif setting.timeframe == "4hour" and (min_ == 0):
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, '4h', exchange, Xmin, Xmax) for sym in symbols]
+			executor.map(main_job, items)
+
+def main_job():
+    schedule.every(1).minutes.at(":02").do(job_func=schedule_signal)
+
+    while True:
+        if Bingx.bot == "Stop":
+            #schedule.cancel_job(my_job)
+            schedule.clear()
+            break
+        schedule.run_pending()
+        print(time.ctime(time.time()))
+        time.sleep(1)
