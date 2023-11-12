@@ -64,14 +64,14 @@ class SpotAPI:
         paramsStr = self.praseParam(paramsMap)
         return self.send_request(method, path, paramsStr, payload)
     
-    def newOrder(self, symbol, side, type_, quantity='', quoteOrderQty='', price='', orderId='', stopPrice=''):
+    def newOrder(self, symbol, side, type_='MARKET', quantity='', quoteOrderQty='', price='', orderId='', stopPrice=''):
         payload = {}
         path = '/openApi/spot/v1/trade/order'
         method = "POST"
         paramsMap = {
             "symbol": symbol,
-            "side": side,
-            "type": type_,
+            "side": side, # BUY/SELL
+            "type": type_, #LIMIT/MARKET
             # "timeInForce": 0,
             "quantity": quantity,
             "quoteOrderQty": quoteOrderQty,
@@ -93,13 +93,16 @@ class SpotAPI:
 
 # api = SpotAPI(config['api_secret'] , config['api_key'])
 
-# # # data = api.getSymbols(symbol="BTC-USDT")
-# data = api.getKline(symbol="BTC-USDT", interval='1m', limit=5)
-# # # # data = api.getBalance()
-# # # # data = api.newOrder(symbol="BTC-USDT", side='BUY', type_="LIMIT", quoteOrderQty=10, price=30000)
+# # # # data = api.getSymbols(symbol="BTC-USDT")
+# # data = api.getKline(symbol="BTC-USDT", interval='1m', limit=5)
+# data = api.getBalance()
+# print(type(str(data)))
+# data = api.newOrder(symbol="BTC-USDT", side='BUY', type_="LIMIT", quoteOrderQty=5, price=35000)
+# print(data)
 # # print(data['data'])
 # import pandas as pd
 # klines = pd.DataFrame(data['data'][::-1][:-1], columns=['time', 'open', 'high', 'low', 'close', 'Filled_price', 'close_time', 'vol'])
 # klines = klines[['time', 'open', 'high', 'low', 'close']]
 # klines['time'] = pd.to_datetime(klines['time']*1000000)
 # print(klines)
+

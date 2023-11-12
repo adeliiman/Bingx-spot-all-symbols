@@ -14,8 +14,6 @@ from setLogger import get_logger
 logger = get_logger(__name__)
 
 
-# db = SessionLocal()
-
 with open('config.json') as f:
     config = json.load(f)
 
@@ -38,29 +36,22 @@ class Bingx:
 	timeframe: str = '15min'
 
 
-	def _getInterval(self, interval):
-		if interval == '15min' or interval == '30min':
-			gap = interval[:2]
-			interval = gap
-		elif interval == '1hour' or interval == '4hour':
-			gap = int(interval[0]) * 60
-			interval = int(interval[0])
-		else:
-			gap = interval[0]
-			interval = gap
-		return interval, gap
-
-
 	def _try(self, method:str, **kwargs):
 		try:
 			if method == 'getSymbols':
 				res = api.getSymbols()
 			elif method == 'getKline':
 				res = api.getKline(symbol=kwargs.get('symbol'), interval=kwargs.get('interval'), limit=kwargs.get('limit'))
+			elif method == 'newOrder':
+				res = api.newOrder(symbol=kwargs.get('symbol'), side=kwargs.get('side'),
+						quoteOrderQty=kwargs.get('quoteQty', ''), quantity=kwargs.get('qty', ''))
+			elif method == 'getBalance':
+				res = api.getBalance()
 
 			if res and res['code']:
-				logger.debug(f'un-success---{method}', exc_info=True) 
+				logger.debug(f'un-success---{method}: '+ str(res)) 
 				return None
+			logger.debug(msg=f"method: {method}" )
 			return res['data']
 		except Exception as e:
 			logger.exception(f"Exception occurred _try method: {method}", exc_info=e)
@@ -80,9 +71,8 @@ class Bingx:
 Bingx = Bingx()
 
 
-def get_signal(items):
-	symbol = items[0]
-	interval = items[1]
+def get_signal(symbol:str, interval):
+	
 	klines = Bingx._try(method="getKline", symbol=symbol, interval=interval, limit=110)
 	klines = klines[::-1][:-1] # last kline is not close
 	klines = pd.DataFrame(klines, columns=['time', 'open', 'high', 'low', 'close', 'Filled_price', 'close_time', 'vol'])
@@ -99,8 +89,26 @@ def get_signal(items):
 		signal = "Buy"
 	elif signal_chandelier == "Sell" and klines['high'].values[-1] < ribbon[2]:
 		signal = "Sell"
-	print(symbol, signal)
+	logger.debug(msg=f"signal: {symbol}: {signal} \n signal_ribbon: {signal_ribbon[0]} \n signal_chandelier: {signal_chandelier}")
 	return signal
+
+
+def new_trade(items):
+	symbol = items[0]
+	interval = items[1]
+	signal = get_signal(symbol, interval)
+	if signal == "Buy":
+		res = Bingx._try(method="newOrder", symbol=symbol, side='BUY', quoteQty=Bingx.trade_value)
+	elif signal == "Sell":
+		qty = Bingx._try(method='getBalance')
+		qty = qty['balances']
+		_qty = 0
+		for q in qty:
+			if q['asset'] == symbol.split('-')[0]:
+				_qty = float(q['free'])
+				break
+		if _qty:
+			res = Bingx._try(method="newOrder", symbol=symbol, side='SELL', qty=_qty)
 
 
 def schedule_signal():
@@ -112,34 +120,22 @@ def schedule_signal():
 	min_ = time.gmtime().tm_min
 
 	if Bingx.timeframe == "1min":
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '1m') for sym in symbols]
-			executor.map(get_signal, items)
-
+		tf = '1m'
 	elif Bingx.timeframe == "5min" and (min_ % 5 == 0):
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '5m') for sym in symbols]
-			executor.map(get_signal, items)
-	
+		tf = '5m'
 	elif Bingx.timeframe == "15min" and (min_ % 15 == 0):
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '15m') for sym in symbols]
-			executor.map(get_signal, items)
-	
+		tf = '15m'
 	elif Bingx.timeframe == "30min" and (min_ % 30 == 0):
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '30m') for sym in symbols]
-			executor.map(get_signal, items)
-
+		tf = '30m'
 	elif Bingx.timeframe == "1hour" and (min_ == 0):
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '1h') for sym in symbols]
-			executor.map(get_signal, items)
-
+		tf = '1h'
 	elif Bingx.timeframe == "4hour" and (min_ == 0):
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, '4h') for sym in symbols]
-			executor.map(get_signal, items)
+		tf = '4h'
+
+	with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+		items = [(sym, f'{tf}') for sym in symbols]
+		executor.map(new_trade, items)
+
 
 def main_job():
     schedule.every(1).minutes.at(":02").do(job_func=schedule_signal)
