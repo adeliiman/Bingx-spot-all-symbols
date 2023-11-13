@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTasks
-import uvicorn
+import uvicorn, requests
 from models import  SettingAdmin, SignalAdmin, SymbolAdmin, ReportView, AllSymbols, AllSymbolAdmin
 from database import engine, Base
 from database import get_db
@@ -11,6 +11,7 @@ from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
 from main import Bingx, main_job
 from utils import get_user_params
+import threading
 
 
 logger = get_logger(__name__)
@@ -20,7 +21,10 @@ Base.metadata.create_all(bind=engine)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_db()
+    from Bingx_websocket_spot import start_bingx_ws
+    threading.Thread(target=start_bingx_ws).start()
     yield
+    Bingx.ws = False
 
 app = FastAPI(lifespan=lifespan)
 admin = Admin(app, engine)
@@ -39,7 +43,6 @@ async def run(tasks: BackgroundTasks, db:Session =Depends(get_db)):
 
     tasks.add_task(main_job)
     Bingx.bot = "Run"
-    #await run_in_threadpool(handle_schedule)
     return  RedirectResponse(url="/admin/home")
 
 
@@ -54,6 +57,12 @@ def closeAll():
     Bingx._try(method="closeAll")
     print("Close All Positions.")
     return  RedirectResponse(url="/admin/home")
+
+# @app.get('/ws')
+# async def ws(tasks: BackgroundTasks):
+#     from Bingx_websocket_spot import start_bingx_ws
+#     tasks.add_task(start_bingx_ws)
+#     print("ws done.")
 
 
 @app.get('/')

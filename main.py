@@ -22,6 +22,7 @@ api = SpotAPI(config['api_secret'] , config['api_key'])
 
 class Bingx:
 	bot: str = 'Stop' # 'Run'
+	ws: bool = True
 	kline: bool = False
 	use_all_symbols: str = "user_symbols"
 	user_symbols: list = []

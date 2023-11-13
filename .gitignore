@@ -4,4 +4,4 @@ __pycache__
 config.json
 venv/
 Bingx.log.*
-Bingx_websocket_spot.py
+temp.txt
