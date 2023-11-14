@@ -51,9 +51,9 @@ class Bingx:
 				res = api.getBalance()
 
 			if res and res['code']:
-				logger.debug(f'un-success---{method}: '+ str(res)) 
+				logger.info(f'un-success---{method}: '+ str(res)) 
 				return None
-			logger.debug(msg=f"method: {method}" )
+			logger.info(msg=f"method: {method}" )
 			return res['data']
 		except Exception as e:
 			logger.exception(f"Exception occurred _try method: {method}", exc_info=e)
@@ -95,7 +95,7 @@ def get_signal(symbol:str, interval):
 	elif signal_chandelier == "Sell" and klines['close'].values[-1] < ribbon[2] and klines['open'].values[-1] < ribbon[2]:
 		signal = "Sell", last_kline_percent
 	
-	logger.debug(msg=f"signal: {symbol}: {signal} \n signal_ribbon: {signal_ribbon[0]} \n signal_chandelier: {signal_chandelier}")
+	logger.info(msg=f"signal: {symbol}: {signal} \n signal_ribbon: {signal_ribbon[0]} \n signal_chandelier: {signal_chandelier}")
 	return signal
 
 
