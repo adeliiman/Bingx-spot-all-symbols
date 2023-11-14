@@ -100,57 +100,62 @@ def get_signal(symbol:str, interval):
 
 
 def new_trade(items):
-	symbol = items[0]
-	interval = items[1]
-	signal, last_kline_percent = get_signal(symbol, interval)
+	try:
+		symbol = items[0]
+		interval = items[1]
+		signal, last_kline_percent = get_signal(symbol, interval)
 
-	if signal == "Buy":
-		# res = Bingx._try(method="newOrder", symbol=symbol, side='BUY', quoteQty=Bingx.trade_value)
-		if last_kline_percent > Bingx.best_symbol.get('percent', default=0):
-			Bingx.best_symbol['percent'] = last_kline_percent
-			Bingx.best_symbol['symbol'] = symbol
-	elif signal == "Sell":
-		qty = Bingx._try(method='getBalance')
-		qty = qty['balances']
-		_qty = 0
-		for q in qty:
-			if q['asset'] == symbol.split('-')[0]:
-				_qty = float(q['free'])
-				break
-		if _qty:
-			res = Bingx._try(method="newOrder", symbol=symbol, side='SELL', qty=_qty)
-
+		if signal == "Buy":
+			# res = Bingx._try(method="newOrder", symbol=symbol, side='BUY', quoteQty=Bingx.trade_value)
+			if last_kline_percent > Bingx.best_symbol.get('percent', default=0):
+				Bingx.best_symbol['percent'] = last_kline_percent
+				Bingx.best_symbol['symbol'] = symbol
+		elif signal == "Sell":
+			qty = Bingx._try(method='getBalance')
+			qty = qty['balances']
+			_qty = 0
+			for q in qty:
+				if q['asset'] == symbol.split('-')[0]:
+					_qty = float(q['free'])
+					break
+			if _qty:
+				res = Bingx._try(method="newOrder", symbol=symbol, side='SELL', qty=_qty)
+	except Exception as e:
+		logger.exception(str(e))
 
 def schedule_signal():
-	Bingx.best_symbol = {}
-	symbols = Bingx.user_symbols
-	if Bingx.use_all_symbols == "All_symbols": 
-		symbols = Bingx.All_symbols
+	try:
+		Bingx.best_symbol = {}
+		symbols = Bingx.user_symbols
+		if Bingx.use_all_symbols == "All_symbols": 
+			symbols = Bingx.All_symbols
 
-	min_ = time.gmtime().tm_min
-	tf = None
+		min_ = time.gmtime().tm_min
+		tf = None
 
-	# if Bingx.timeframe == "1min":
-	# 	tf = '1m'
-	if Bingx.timeframe == "5min" and (min_ % 5 == 0):
-		tf = '5m'
-	elif Bingx.timeframe == "15min" and (min_ % 15 == 0):
-		tf = '15m'
-	elif Bingx.timeframe == "30min" and (min_ % 30 == 0):
-		tf = '30m'
-	elif Bingx.timeframe == "1hour" and (min_ == 0):
-		tf = '1h'
-	elif Bingx.timeframe == "4hour" and (min_ == 0):
-		tf = '4h'
+		# if Bingx.timeframe == "1min":
+		# 	tf = '1m'
+		if Bingx.timeframe == "5min" and (min_ % 5 == 0):
+			tf = '5m'
+		elif Bingx.timeframe == "15min" and (min_ % 15 == 0):
+			tf = '15m'
+		elif Bingx.timeframe == "30min" and (min_ % 30 == 0):
+			tf = '30m'
+		elif Bingx.timeframe == "1hour" and (min_ == 0):
+			tf = '1h'
+		elif Bingx.timeframe == "4hour" and (min_ == 0):
+			tf = '4h'
 
-	if tf:
-		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-			items = [(sym, f'{tf}') for sym in symbols]
-			executor.map(new_trade, items)
-		
-		if Bingx.best_symbol:
-			res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=Bingx.trade_value)
-			Bingx.best_symbol = {}
+		if tf:
+			with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+				items = [(sym, f'{tf}') for sym in symbols]
+				executor.map(new_trade, items)
+			
+			if Bingx.best_symbol:
+				res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=Bingx.trade_value)
+				Bingx.best_symbol = {}
+	except Exception as e:
+		logger.exception(str(e))
 
 
 def main_job():
