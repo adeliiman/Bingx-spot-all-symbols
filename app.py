@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTasks
-import uvicorn
+import uvicorn, threading
 from models import  SettingAdmin, SignalAdmin, SymbolAdmin, ReportView, AllSymbols, AllSymbolAdmin
 from database import engine, Base
 from database import get_db
@@ -11,7 +11,8 @@ from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
 from main import Bingx, main_job
 from utils import get_user_params
-import threading
+from Bingx_websocket_spot import start_bingx_ws
+
 
 
 logger = get_logger(__name__)
@@ -21,7 +22,7 @@ Base.metadata.create_all(bind=engine)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_db()
-    from Bingx_websocket_spot import start_bingx_ws
+    
     threading.Thread(target=start_bingx_ws).start()
     yield
     Bingx.ws = False

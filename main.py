@@ -35,6 +35,7 @@ class Bingx:
 	chandelier_multi: int = 3
 	trade_value: int = 10
 	timeframe: str = '15min'
+	best_symbol: dict = {}
 
 
 	def _try(self, method:str, **kwargs):
@@ -86,13 +87,13 @@ def get_signal(symbol:str, interval):
 	signal = None
 	ribbon = signal_ribbon[1:]
 	ribbon.sort() # min to max/ Ascending
-	last_kline_color = klines['close'].values[-1] - klines['open'].values[-1]
+	last_kline_percent = (klines['close'].values[-1] - klines['open'].values[-1]) / klines['open'].values[-1]
 	over_ema_lines = klines['open'].values[-1] > ribbon[-1]
 
-	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy" and last_kline_color > 0 and over_ema_lines:
-		signal = "Buy"
+	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy" and last_kline_percent > 0 and over_ema_lines:
+		signal = "Buy", last_kline_percent
 	elif signal_chandelier == "Sell" and klines['close'].values[-1] < ribbon[2] and klines['open'].values[-1] < ribbon[2]:
-		signal = "Sell"
+		signal = "Sell", last_kline_percent
 	
 	logger.debug(msg=f"signal: {symbol}: {signal} \n signal_ribbon: {signal_ribbon[0]} \n signal_chandelier: {signal_chandelier}")
 	return signal
@@ -101,9 +102,13 @@ def get_signal(symbol:str, interval):
 def new_trade(items):
 	symbol = items[0]
 	interval = items[1]
-	signal = get_signal(symbol, interval)
+	signal, last_kline_percent = get_signal(symbol, interval)
+
 	if signal == "Buy":
-		res = Bingx._try(method="newOrder", symbol=symbol, side='BUY', quoteQty=Bingx.trade_value)
+		# res = Bingx._try(method="newOrder", symbol=symbol, side='BUY', quoteQty=Bingx.trade_value)
+		if last_kline_percent > Bingx.best_symbol.get('percent', default=0):
+			Bingx.best_symbol['percent'] = last_kline_percent
+			Bingx.best_symbol['symbol'] = symbol
 	elif signal == "Sell":
 		qty = Bingx._try(method='getBalance')
 		qty = qty['balances']
@@ -117,7 +122,7 @@ def new_trade(items):
 
 
 def schedule_signal():
-
+	Bingx.best_symbol = {}
 	symbols = Bingx.user_symbols
 	if Bingx.use_all_symbols == "All_symbols": 
 		symbols = Bingx.All_symbols[:10]
@@ -140,6 +145,10 @@ def schedule_signal():
 	with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
 		items = [(sym, f'{tf}') for sym in symbols]
 		executor.map(new_trade, items)
+	
+	if Bingx.best_symbol:
+		res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=Bingx.trade_value)
+		Bingx.best_symbol = {}
 
 
 def main_job():

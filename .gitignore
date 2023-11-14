@@ -5,3 +5,4 @@ config.json
 venv/
 Bingx.log.*
 temp.txt
+test.py
