@@ -14,10 +14,17 @@ def Ma_Ribbon(close, length1=40, length2=60, length3=80, length4=100):
         ema3 = ta.ma(name='ema', source=close, length=length3) # yellow
         ema4 = ta.ma(name='ema', source=close, length=length4) # red
         signal = None
-        if ema1.values[-1] < ema2.values[-1] < ema3.values[-1] < ema4.values[-1]:
+        
+        def cond_sell(i):
+            return ema1.values[-i] < ema2.values[-i] < ema3.values[-i] < ema4.values[-i]
+        def cond_buy(i):
+            ema1.values[-i] > ema2.values[-i] > ema3.values[-i] > ema4.values[-i]
+        
+        if cond_sell(1) and not cond_sell(2):
             signal = "Short"
-        elif ema1.values[-1] > ema2.values[-1] > ema3.values[-1] > ema4.values[-1]:
+        elif cond_buy(1) and not cond_buy(2):
             signal = "Long"
+        
         return  [signal, ema1.values[-1], ema2.values[-1], ema3.values[-1], ema4.values[-1] ]
     except Exception as e:
         logger.exception(msg="Ma_Ribbon error.", exc_info=e)
