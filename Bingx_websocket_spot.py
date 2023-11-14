@@ -4,6 +4,7 @@ import json, requests
 from database import SessionLocal
 from models import  Signal
 from setLogger import get_logger
+from datetime import datetime
 
 
 logger = get_logger(__name__)
@@ -134,7 +135,7 @@ def handler(data):
             signal.price = price
             signal.side = direction
             signal.qty = quantity
-            signal.time = event_Time
+            signal.time = datetime.fromtimestamp(int(event_Time)/1000).strftime("%Y-%m-%d %H:%M:%S") 
             db = SessionLocal()
             db.add(signal)
             db.commit()

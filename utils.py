@@ -14,7 +14,7 @@ def Ma_Ribbon(close, length1=40, length2=60, length3=80, length4=100):
         ema3 = ta.ma(name='ema', source=close, length=length3) # yellow
         ema4 = ta.ma(name='ema', source=close, length=length4) # red
         signal = None
-        
+
         def cond_sell(i):
             return ema1.values[-i] < ema2.values[-i] < ema3.values[-i] < ema4.values[-i]
         def cond_buy(i):
@@ -105,15 +105,3 @@ def get_user_params(db: Session):
         logger.exception(msg="get_user_params", exc_info=e)
 
 
-# async def add_signal(symbol, side, price, qty, time, db: Session):
-#     try:
-#         signal = Signal()
-#         signal.symbol = symbol
-#         signal.price = price
-#         signal.side = side
-#         signal.qty = qty
-#         signal.time = time
-#         db.add(signal)
-#         db.commit()
-#     except Exception as e:
-#         logger.exception(msg="add signal: "+ str(e))
