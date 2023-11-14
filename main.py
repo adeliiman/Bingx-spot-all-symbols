@@ -85,11 +85,15 @@ def get_signal(symbol:str, interval):
 
 	signal = None
 	ribbon = signal_ribbon[1:]
-	ribbon.sort()
-	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy":
+	ribbon.sort() # min to max/ Ascending
+	last_kline_color = klines['close'].values[-1] - klines['open'].values[-1]
+	over_ema_lines = klines['open'].values[-1] > ribbon[-1]
+
+	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy" and last_kline_color > 0 and over_ema_lines:
 		signal = "Buy"
-	elif signal_chandelier == "Sell" and klines['high'].values[-1] < ribbon[2]:
+	elif signal_chandelier == "Sell" and klines['close'].values[-1] < ribbon[2] and klines['open'].values[-1] < ribbon[2]:
 		signal = "Sell"
+	
 	logger.debug(msg=f"signal: {symbol}: {signal} \n signal_ribbon: {signal_ribbon[0]} \n signal_chandelier: {signal_chandelier}")
 	return signal
 
