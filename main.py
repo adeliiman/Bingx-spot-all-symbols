@@ -81,8 +81,8 @@ def get_signal(symbol:str, interval):
 	klines['time'] = pd.to_datetime(klines['time']*1000000)
 	klines = klines[['time', 'open', 'high', 'low', 'close']] # last row is last kline
 	#
-	signal_ribbon = Ma_Ribbon(klines['close'])
-	signal_chandelier = Chandelier_Exit(df=klines)
+	signal_ribbon = Ma_Ribbon(klines['close'], length1=Bingx.ma1, length2=Bingx.ma2, length3=Bingx.ma3, length4=Bingx.ma4)
+	signal_chandelier = Chandelier_Exit(df=klines, length=Bingx.chandelier_length, mult=Bingx.chandelier_multi)
 
 	signal = None
 	ribbon = signal_ribbon[1:]
@@ -91,12 +91,12 @@ def get_signal(symbol:str, interval):
 	over_ema_lines = klines['open'].values[-1] > ribbon[-1]
 
 	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy" and last_kline_percent > 0 and over_ema_lines:
-		signal = "Buy", last_kline_percent
+		signal = "Buy"
 	elif signal_chandelier == "Sell" and klines['close'].values[-1] < ribbon[2] and klines['open'].values[-1] < ribbon[2]:
-		signal = "Sell", last_kline_percent
+		signal = "Sell"
 	
 	logger.info(msg=f"signal: {symbol}: {signal} \n signal_ribbon: {signal_ribbon[0]} \n signal_chandelier: {signal_chandelier}")
-	return signal
+	return signal, last_kline_percent
 
 
 def new_trade(items):
@@ -125,13 +125,13 @@ def schedule_signal():
 	Bingx.best_symbol = {}
 	symbols = Bingx.user_symbols
 	if Bingx.use_all_symbols == "All_symbols": 
-		symbols = Bingx.All_symbols[:10]
+		symbols = Bingx.All_symbols
 
 	min_ = time.gmtime().tm_min
 
-	if Bingx.timeframe == "1min":
-		tf = '1m'
-	elif Bingx.timeframe == "5min" and (min_ % 5 == 0):
+	# if Bingx.timeframe == "1min":
+	# 	tf = '1m'
+	if Bingx.timeframe == "5min" and (min_ % 5 == 0):
 		tf = '5m'
 	elif Bingx.timeframe == "15min" and (min_ % 15 == 0):
 		tf = '15m'

@@ -108,7 +108,7 @@ class AllSymbols(Base):
 class AllSymbolAdmin(ModelView, model=AllSymbols):
     column_list = [AllSymbols.id, AllSymbols.symbol]
     column_searchable_list = [AllSymbols.symbol]
-    column_sortable_list = [AllSymbols.symbol]
+    column_sortable_list = [AllSymbols.symbol, AllSymbols.id]
     name = "symbol"
     name_plural = "All Symbols"
     icon = "fa-sharp fa-solid fa-bitcoin-sign"

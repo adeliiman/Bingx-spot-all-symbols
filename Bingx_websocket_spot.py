@@ -37,7 +37,6 @@ class BingxWS:
         headers = {"X-BX-APIKEY" : self.APIKEY}
         res = requests.post("https://open-api.bingx.com/openApi/user/auth/userDataStream", headers=headers)
         self.listenKey = res.json()['listenKey']
-        print(self.listenKey)
         return self.listenKey
     
     def extendListenKey(self):
@@ -48,11 +47,8 @@ class BingxWS:
     
 
     def on_open(self, ws):
-        # subscribe = {"id":"24dd0e35-56a4-4f7a-af8a-394c7060909c","dataType":"BTC-USDT@trade"} 
         subscribe = self.sub
         ws.send(json.dumps(subscribe))
-        # for sub in subscribe:
-        #     ws.send(json.dumps(sub))
 
 
     def on_message(self, ws, msg):
