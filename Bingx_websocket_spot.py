@@ -5,6 +5,7 @@ from database import SessionLocal
 from models import  Signal
 from setLogger import get_logger
 from datetime import datetime
+import threading
 
 
 logger = get_logger(__name__)
@@ -129,17 +130,21 @@ def handler(data):
         price = data['p']
 
         print(pair, event_Type, event_Time, direction, order_Type, quantity, price)
-        try:
-            signal = Signal()
-            signal.symbol = pair
-            signal.price = price
-            signal.side = direction
-            signal.qty = quantity
-            signal.time = datetime.fromtimestamp(int(event_Time)/1000).strftime("%Y-%m-%d %H:%M:%S") 
-            db = SessionLocal()
-            db.add(signal)
-            db.commit()
-            db.close()
-        except Exception as e:
-            logger.exception(msg="add signal: "+ str(e))
+        def add_to_sqlite(pair, price, direction, quantity, event_Time):
+            try:
+                signal = Signal()
+                signal.symbol = pair
+                signal.price = price
+                signal.side = direction
+                signal.qty = quantity
+                signal.time = datetime.fromtimestamp(int(event_Time)/1000).strftime("%Y-%m-%d %H:%M:%S") 
+                db = SessionLocal()
+                db.add(signal)
+                db.commit()
+                db.close()
+                logger.info(msg=f"add order to sqlite: {pair}-{price}-{direction}-{quantity}-{event_Time}")
+            except Exception as e:
+                logger.exception(msg="add signal: "+ str(e))
+        
+        threading.Thread(target=add_to_sqlite, args=(pair, price, direction, quantity, event_Time)).start()
 
