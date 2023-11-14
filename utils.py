@@ -1,6 +1,6 @@
 import pandas_ta as ta
 from sqlalchemy.orm import Session
-from models import Setting, Symbols, AllSymbols
+from models import Setting, Symbols, AllSymbols, Signal
 
 from setLogger import get_logger
 
@@ -97,3 +97,16 @@ def get_user_params(db: Session):
     except Exception as e:
         logger.exception(msg="get_user_params", exc_info=e)
 
+
+# async def add_signal(symbol, side, price, qty, time, db: Session):
+#     try:
+#         signal = Signal()
+#         signal.symbol = symbol
+#         signal.price = price
+#         signal.side = side
+#         signal.qty = qty
+#         signal.time = time
+#         db.add(signal)
+#         db.commit()
+#     except Exception as e:
+#         logger.exception(msg="add signal: "+ str(e))

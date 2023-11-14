@@ -1,7 +1,12 @@
 
 import websocket, time, gzip
-import json, requests, schedule, threading
+import json, requests
+from database import SessionLocal
+from models import  Signal
+from setLogger import get_logger
 
+
+logger = get_logger(__name__)
 
 
 with open('config.json') as f:
@@ -64,7 +69,7 @@ class BingxWS:
             elif int(time.strftime('%M', time.localtime(time.time()))) % 30 != 0:
                 self.extendListenKeyStatus = False
         else:
-            self.handeler(data)
+             self.handeler(data)
 
 
     def on_error(self, ws, error):
@@ -87,7 +92,7 @@ class BingxWS:
         self.ws = websocket.WebSocketApp(url=self.url+f"?listenKey={listenKey}", 
                                 on_open=self.on_open, 
                                 on_close=self.on_close,
-                                on_message=self.on_message,
+                                on_message=  self.on_message,
                                 on_error=self.on_error,
                                 header = self.headers)
         print("BingX WS OPENING ... ... ...")
@@ -105,7 +110,7 @@ class BingxWS:
 def start_bingx_ws():
     subscribe = {"id": "spot", "dataType": "spot.executionReport"}
     from main import Bingx
-    bingxWS = BingxWS(handler=handler, sub=subscribe, Bingx=Bingx)
+    bingxWS =  BingxWS(handler=handler, sub=subscribe, Bingx=Bingx)
     bingxWS.start()
 
 
@@ -123,6 +128,17 @@ def handler(data):
         price = data['p']
 
         print(pair, event_Type, event_Time, direction, order_Type, quantity, price)
-        
+        try:
+            signal = Signal()
+            signal.symbol = pair
+            signal.price = price
+            signal.side = direction
+            signal.qty = quantity
+            signal.time = event_Time
+            db = SessionLocal()
+            db.add(signal)
+            db.commit()
+            db.close()
+        except Exception as e:
+            logger.exception(msg="add signal: "+ str(e))
 
-# threading.Thread(target=start_bingx_ws).start()

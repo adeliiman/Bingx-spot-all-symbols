@@ -49,31 +49,22 @@ class Signal(Base):
     id = Column(Integer,primary_key=True,index=True)
     symbol = Column(String)
     side = Column(String)
-    peak2 = Column(Float)
-    level0 = Column(Float)
-    level1 = Column(Float)
-    level2 = Column(Float)
-    level3 = Column(Float)
-    SLPrice = Column(Float)
-    vol1 = Column(Float)
-    vol2 = Column(Float)
-    vol3 = Column(Float)
+    price = Column(Float)
+    qty = Column(Float)
     time = Column(String)
-    status = Column(String)
 
 
 class SignalAdmin(ModelView, model=Signal):
-    column_list = [Signal.id, Signal.symbol, Signal.side, Signal.time, Signal.level0, Signal.level1, Signal.level2, Signal.level3, 
-                   Signal.SLPrice, Signal.status, Signal.peak2]
-    column_searchable_list = [Signal.symbol, Signal.side, Signal.time]
+    column_list = [Signal.id, Signal.symbol, Signal.side, Signal.time, Signal.qty]
+    column_searchable_list = [Signal.symbol, Signal.side, Signal.time, Signal.qty]
     #icon = "fa-chart-line"
     icon = "fas fa-chart-line"
-    column_sortable_list = [Signal.id, Signal.time]
-    column_formatters = {Signal.level0 : lambda m, a: round(m.level0,4),
-                         Signal.level1 : lambda m, a: round(m.level1,4),
-                         Signal.level2 : lambda m, a: round(m.level2,4),
-                         Signal.level3 : lambda m, a: round(m.level3,4),
-                         Signal.SLPrice : lambda m, a:round(m.SLPrice,4)}
+    column_sortable_list = [Signal.id, Signal.time, Signal.qty]
+    # column_formatters = {Signal.level0 : lambda m, a: round(m.level0,4),
+    #                      Signal.level1 : lambda m, a: round(m.level1,4),
+    #                      Signal.level2 : lambda m, a: round(m.level2,4),
+    #                      Signal.level3 : lambda m, a: round(m.level3,4),
+    #                      Signal.SLPrice : lambda m, a:round(m.SLPrice,4)}
     
     async def on_model_change(self, data, model, is_created):
         # Perform some other action

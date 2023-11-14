@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTasks
-import uvicorn, requests
+import uvicorn
 from models import  SettingAdmin, SignalAdmin, SymbolAdmin, ReportView, AllSymbols, AllSymbolAdmin
 from database import engine, Base
 from database import get_db
@@ -57,12 +57,6 @@ def closeAll():
     Bingx._try(method="closeAll")
     print("Close All Positions.")
     return  RedirectResponse(url="/admin/home")
-
-# @app.get('/ws')
-# async def ws(tasks: BackgroundTasks):
-#     from Bingx_websocket_spot import start_bingx_ws
-#     tasks.add_task(start_bingx_ws)
-#     print("ws done.")
 
 
 @app.get('/')
