@@ -72,10 +72,12 @@ class BingxWS:
 
     def on_error(self, ws, error):
         print('on_error: ', error)
+        logger.error(error)
+        
 
 
     def on_close(self, ws, close_status_code, close_msg):
-        print("### closed ###")
+        logger.error("Bingx close")
         if close_status_code or close_msg:
             print("close status code: " + str(close_status_code))
             print("close message: " + str(close_msg))
@@ -101,7 +103,7 @@ class BingxWS:
 
     def stop(self):
         self.ws.close()
-        print('BingxWS  Closed.')
+        logger.info('BingxWS  Closed.')
 
 
 

@@ -128,6 +128,7 @@ def schedule_signal():
 		symbols = Bingx.All_symbols
 
 	min_ = time.gmtime().tm_min
+	tf = None
 
 	# if Bingx.timeframe == "1min":
 	# 	tf = '1m'
@@ -142,13 +143,14 @@ def schedule_signal():
 	elif Bingx.timeframe == "4hour" and (min_ == 0):
 		tf = '4h'
 
-	with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
-		items = [(sym, f'{tf}') for sym in symbols]
-		executor.map(new_trade, items)
-	
-	if Bingx.best_symbol:
-		res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=Bingx.trade_value)
-		Bingx.best_symbol = {}
+	if tf:
+		with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
+			items = [(sym, f'{tf}') for sym in symbols]
+			executor.map(new_trade, items)
+		
+		if Bingx.best_symbol:
+			res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=Bingx.trade_value)
+			Bingx.best_symbol = {}
 
 
 def main_job():
