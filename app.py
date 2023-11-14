@@ -44,13 +44,14 @@ async def run(tasks: BackgroundTasks, db:Session =Depends(get_db)):
 
     tasks.add_task(main_job)
     Bingx.bot = "Run"
+    logger.info(msg="Bingx started ... ... ...")
     return  RedirectResponse(url="/admin/home")
 
 
 @app.get('/stop')
 def stop():
     Bingx.bot = "Stop"
-    print("Bingx stoped. ................")
+    logger.info("Bingx stoped. ................")
     return  RedirectResponse(url="/admin/home")
 
 @app.get('/closeAll')
