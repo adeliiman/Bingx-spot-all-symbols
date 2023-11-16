@@ -94,6 +94,8 @@ def get_user_params(db: Session):
         Bingx.chandelier_length = user.chandelier_length
         Bingx.chandelier_multi = user.chandelier_multi
         Bingx.trade_value = user.trade_value
+        Bingx.trade_percent = user.trade_percent
+        Bingx.trade_volume = user.trade_volume
         Bingx.timeframe = user.timeframe
         Bingx.use_all_symbols = user.use_all_symbols
         for sym in user_symbols:

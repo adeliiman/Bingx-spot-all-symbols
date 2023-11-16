@@ -12,6 +12,8 @@ class Setting(Base):
     id = Column(Integer,primary_key=True)  
     timeframe = Column(String)
     trade_value = Column(Integer)
+    trade_percent = Column(Integer)
+    trade_volume = Column(String)
     ma1 = Column(Integer)
     ma2 = Column(Integer)
     ma3 = Column(Integer)
@@ -23,14 +25,15 @@ class Setting(Base):
 
 class SettingAdmin(ModelView, model=Setting):
     #form_columns = [User.name]
-    column_list = [Setting.id, Setting.timeframe, Setting.trade_value, Setting.ma1, Setting.ma2, Setting.ma3, Setting.ma4,
+    column_list = [Setting.id, Setting.timeframe, Setting.trade_value, Setting.trade_percent, Setting.trade_volume,Setting.ma1, Setting.ma2, Setting.ma3, Setting.ma4,
                     Setting.chandelier_length, Setting.chandelier_multi, Setting.use_all_symbols]
     name = "user setting"
     name_plural = "Setting"
     icon = "fa-solid fa-user"
     form_args = dict(timeframe=dict(default="15min", choices=["15min", "5min", "30min", "1hour", "4hour"]), 
+                     trade_volume=dict(default="Dollar", choices=['Dollar', 'Percent']),
                      use_all_symbols=dict(default="user_symbols", choices=["user_symbols", "All_symbols"]))
-    form_overrides =  dict(timeframe=wtforms.SelectField, use_all_symbols=wtforms.SelectField)
+    form_overrides =  dict(timeframe=wtforms.SelectField, use_all_symbols=wtforms.SelectField, trade_volume=wtforms.SelectField)
 
     async def on_model_change(self, data, model, is_created):
         # Perform some other action

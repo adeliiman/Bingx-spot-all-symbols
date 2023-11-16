@@ -34,6 +34,8 @@ class Bingx:
 	chandelier_length: int = 22
 	chandelier_multi: int = 3
 	trade_value: int = 10
+	trade_percent: int = 50
+	trade_volume: str = "trade_value"
 	timeframe: str = '15min'
 	best_symbol: dict = {}
 
@@ -120,6 +122,7 @@ def new_trade(items):
 					break
 			if _qty:
 				res = Bingx._try(method="newOrder", symbol=symbol, side='SELL', qty=_qty)
+
 	except Exception as e:
 		logger.exception(str(e))
 
@@ -152,7 +155,18 @@ def schedule_signal():
 				executor.map(new_trade, items)
 			
 			if Bingx.best_symbol:
-				res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=Bingx.trade_value)
+				if Bingx.trade_volume == "Dollar":
+					qty = Bingx.trade_value
+				else:
+					qty = Bingx._try(method='getBalance')
+					qty = qty['balances']
+					_qty = 0
+					for q in qty:
+						if q['asset'] == "USDT":
+							_qty = float(q['free']) * Bingx.trade_percent / 100
+							break
+					qty = _qty
+				res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=qty)
 				Bingx.best_symbol = {}
 	except Exception as e:
 		logger.exception(str(e))
