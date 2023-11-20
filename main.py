@@ -1,4 +1,4 @@
-import requests, json, time
+import requests, json, time, random
 from datetime import datetime
 import pandas as pd
 from datetime import datetime, timedelta
@@ -38,6 +38,7 @@ class Bingx:
 	trade_volume: str = "trade_value"
 	timeframe: str = '15min'
 	best_symbol: dict = {}
+	balance: list = []
 
 
 	def _try(self, method:str, **kwargs):
@@ -79,7 +80,7 @@ def get_signal(symbol:str, interval):
 	
 	klines = Bingx._try(method="getKline", symbol=symbol, interval=interval, limit=110)
 	if not klines:
-		return None, 0
+		return None, 0, 0
 	klines = klines[::-1][:-1] # last kline is not close
 	klines = pd.DataFrame(klines, columns=['time', 'open', 'high', 'low', 'close', 'Filled_price', 'close_time', 'vol'])
 	klines['time'] = pd.to_datetime(klines['time']*1000000)
@@ -103,30 +104,32 @@ def get_signal(symbol:str, interval):
 		signal = "Sell"
 	
 	logger.info(msg=f"signal: {symbol}: {signal}  ,last_kline_percent: {last_kline_percent}")
-	return signal, last_kline_percent
+	return signal, last_kline_percent, klines['close'].iat[-1]
+
 
 
 def new_trade(items):
 	try:
+		time.sleep(0.1 + random.randint(0, 5)/100)
 		symbol = items[0]
 		interval = items[1]
-		signal, last_kline_percent = get_signal(symbol, interval)
+		signal, last_kline_percent, price = get_signal(symbol, interval)
 
 		if signal == "Buy":
 			# res = Bingx._try(method="newOrder", symbol=symbol, side='BUY', quoteQty=Bingx.trade_value)
-			if last_kline_percent > Bingx.best_symbol.get('percent', default=0):
+			if last_kline_percent > Bingx.best_symbol.get('percent', 0):
 				Bingx.best_symbol['percent'] = last_kline_percent
 				Bingx.best_symbol['symbol'] = symbol
 				logger.info(f"set best symbol: {symbol}---{last_kline_percent}")
 		elif signal == "Sell":
-			qty = Bingx._try(method='getBalance')
-			qty = qty['balances']
+			
 			_qty = 0
-			for q in qty:
+			for q in Bingx.balance:
 				if q['asset'] == symbol.split('-')[0]:
 					_qty = float(q['free'])
 					break
-			if _qty:
+			logger.info(f"quantity: {_qty}---{symbol}")
+			if _qty and price*_qty>2:
 				res = Bingx._try(method="newOrder", symbol=symbol, side='SELL', qty=_qty)
 				logger.info(f"sell order {symbol}---{_qty}-dollar")
 
@@ -140,6 +143,9 @@ def schedule_signal():
 		symbols = Bingx.user_symbols
 		if Bingx.use_all_symbols == "All_symbols": 
 			symbols = Bingx.All_symbols
+
+		qty = Bingx._try(method='getBalance')
+		Bingx.balance = qty['balances']
 
 		min_ = time.gmtime().tm_min
 		tf = None
@@ -176,7 +182,7 @@ def schedule_signal():
 							break
 					qty = _qty
 				res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=qty)
-				logger.info(f"buy order: {Bingx.best_symbol['symbol']}, quantity: {_qty}---{Bingx.best_symbol['percent']}")
+				logger.info(f"buy order: {Bingx.best_symbol['symbol']}, quantity: {qty}---{Bingx.best_symbol['percent']}")
 				Bingx.best_symbol = {}
 	except Exception as e:
 		logger.exception(str(e))
