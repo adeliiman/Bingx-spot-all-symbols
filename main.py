@@ -53,9 +53,9 @@ class Bingx:
 				res = api.getBalance()
 
 			if res and res['code']:
-				logger.info(f'un-success---{method}: '+ str(res)) 
+				logger.info(f"un-success---{method}-symbol: {kwargs.get('symbol')}: "+ str(res)) 
 				return None
-			logger.info(msg=f"method: {method}" )
+			logger.info(msg=f"method: {method}--symbol: {kwargs.get('symbol')}" )
 			return res['data']
 		except Exception as e:
 			logger.exception(f"Exception occurred _try method: {method}", exc_info=e)
@@ -78,6 +78,8 @@ Bingx = Bingx()
 def get_signal(symbol:str, interval):
 	
 	klines = Bingx._try(method="getKline", symbol=symbol, interval=interval, limit=110)
+	if not klines:
+		return None, 0
 	klines = klines[::-1][:-1] # last kline is not close
 	klines = pd.DataFrame(klines, columns=['time', 'open', 'high', 'low', 'close', 'Filled_price', 'close_time', 'vol'])
 	klines['time'] = pd.to_datetime(klines['time']*1000000)
@@ -89,15 +91,18 @@ def get_signal(symbol:str, interval):
 	signal = None
 	ribbon = signal_ribbon[1:]
 	ribbon.sort() # min to max/ Ascending
-	last_kline_percent = (klines['close'].values[-1] - klines['open'].values[-1]) / klines['open'].values[-1]
-	over_ema_lines = klines['open'].values[-1] > ribbon[-1]
+	last_kline_percent = (klines['close'].iat[-1] - klines['open'].iat[-1]) / klines['open'].iat[-1]
+	over_ema_lines = klines['open'].iat[-1] > ribbon[-1]
+
+	logger.info(f"signal_ribbon: {signal_ribbon[0]}  signal_chandelier: {signal_chandelier}")
+	logger.info(f"over_ema_lines: {over_ema_lines}")
 
 	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy" and last_kline_percent > 0 and over_ema_lines:
 		signal = "Buy"
-	elif signal_chandelier == "Sell" and klines['close'].values[-1] < ribbon[2] and klines['open'].values[-1] < ribbon[2]:
+	elif signal_chandelier == "Sell" or (klines['close'].values[-1] < ribbon[2] and klines['open'].values[-1] < ribbon[2]):
 		signal = "Sell"
 	
-	logger.info(msg=f"signal: {symbol}: {signal} \n signal_ribbon: {signal_ribbon[0]} \n signal_chandelier: {signal_chandelier}")
+	logger.info(msg=f"signal: {symbol}: {signal}  ,last_kline_percent: {last_kline_percent}")
 	return signal, last_kline_percent
 
 
@@ -112,6 +117,7 @@ def new_trade(items):
 			if last_kline_percent > Bingx.best_symbol.get('percent', default=0):
 				Bingx.best_symbol['percent'] = last_kline_percent
 				Bingx.best_symbol['symbol'] = symbol
+				logger.info(f"set best symbol: {symbol}---{last_kline_percent}")
 		elif signal == "Sell":
 			qty = Bingx._try(method='getBalance')
 			qty = qty['balances']
@@ -122,9 +128,11 @@ def new_trade(items):
 					break
 			if _qty:
 				res = Bingx._try(method="newOrder", symbol=symbol, side='SELL', qty=_qty)
+				logger.info(f"sell order {symbol}---{_qty}-dollar")
 
 	except Exception as e:
 		logger.exception(str(e))
+
 
 def schedule_signal():
 	try:
@@ -155,6 +163,7 @@ def schedule_signal():
 				executor.map(new_trade, items)
 			
 			if Bingx.best_symbol:
+				logger.info(f"Buying {Bingx.best_symbol['symbol']} ... ... ...")
 				if Bingx.trade_volume == "Dollar":
 					qty = Bingx.trade_value
 				else:
@@ -167,6 +176,7 @@ def schedule_signal():
 							break
 					qty = _qty
 				res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=qty)
+				logger.info(f"buy order: {Bingx.best_symbol['symbol']}, quantity: {_qty}---{Bingx.best_symbol['percent']}")
 				Bingx.best_symbol = {}
 	except Exception as e:
 		logger.exception(str(e))
