@@ -110,7 +110,7 @@ def get_signal(symbol:str, interval):
 
 def new_trade(items):
 	try:
-		time.sleep(0.1 + random.randint(0, 5)/100)
+		time.sleep(0.5 + random.randint(5, 9)/100)
 		symbol = items[0]
 		interval = items[1]
 		signal, last_kline_percent, price = get_signal(symbol, interval)

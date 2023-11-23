@@ -14,12 +14,6 @@ def Ma_Ribbon(close, length1=40, length2=60, length3=80, length4=100):
         ema3 = ta.ma(name='ema', source=close, length=length3) # yellow
         ema4 = ta.ma(name='ema', source=close, length=length4) # red
         signal = None
-        print(ema1)
-
-        # def cond_sell(i):
-        #     return ema1.iat[-i] < ema2.iat[-i] < ema3.iat[-i] < ema4.iat[-i]
-        # def cond_buy(i):
-        #     ema1.iat[-i] > ema2.iat[-i] > ema3.iat[-i] > ema4.iat[-i]
         
         if ema1.iat[-1] < ema2.iat[-1] < ema3.iat[-1] < ema4.iat[-1]:
             signal = "Short"
