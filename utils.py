@@ -16,9 +16,9 @@ def Ma_Ribbon(close, length1=40, length2=60, length3=80, length4=100):
         signal = None
         
         if ema1.iat[-1] < ema2.iat[-1] < ema3.iat[-1] < ema4.iat[-1]:
-            signal = "Short"
+            signal = "Sell"
         elif ema1.iat[-1] > ema2.iat[-1] > ema3.iat[-1] > ema4.iat[-1]:
-            signal = "Long"
+            signal = "Buy"
         
         return  [signal, ema1.iat[-1], ema2.iat[-1], ema3.iat[-1], ema4.iat[-1] ]
     except Exception as e:

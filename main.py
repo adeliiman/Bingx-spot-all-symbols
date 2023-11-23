@@ -95,8 +95,7 @@ def get_signal(symbol:str, interval):
 	last_kline_percent = (klines['close'].iat[-1] - klines['open'].iat[-1]) / klines['open'].iat[-1]
 	over_ema_lines = klines['open'].iat[-1] > ribbon[-1]
 
-	logger.info(f"signal_ribbon: {signal_ribbon[0]}  signal_chandelier: {signal_chandelier}")
-	logger.info(f"over_ema_lines: {over_ema_lines}")
+	logger.info(f"{symbol}: signal_ribbon: {signal_ribbon[0]}  signal_chandelier: {signal_chandelier} over_ema_lines: {over_ema_lines}")
 
 	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy" and last_kline_percent > 0 and over_ema_lines:
 		signal = "Buy"
@@ -174,17 +173,18 @@ def schedule_signal():
 				return None
 			
 			logger.info(f"Buying {Bingx.best_symbol['symbol']} ... ... ...")
-			qty = Bingx.balance
-			_qty = 0
-			for q in qty:
+		
+			
+			balance = 0
+			for q in Bingx.balance:
 				if q['asset'] == "USDT":
-					_qty = float(q['free']) * Bingx.trade_percent / 100
-				elif q['asset'] == Bingx.best_symbol['symbol']:
+					qty = float(q['free']) * Bingx.trade_percent / 100
+				elif q['asset'] == Bingx.best_symbol['symbol'].split("-")[0]:
 					balance = float(q['free'])
 			if balance * Bingx.best_symbol['price'] > 5:
 				logger.info(f"we have volume on {Bingx.best_symbol['symbol']}")
 				return None
-			qty = _qty
+			
 			if Bingx.trade_volume == "Dollar":
 				qty = Bingx.trade_value
 
