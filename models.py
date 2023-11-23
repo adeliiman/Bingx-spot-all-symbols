@@ -30,7 +30,7 @@ class SettingAdmin(ModelView, model=Setting):
     name = "user setting"
     name_plural = "Setting"
     icon = "fa-solid fa-user"
-    form_args = dict(timeframe=dict(default="15min", choices=["15min", "5min", "30min", "1hour", "4hour", "1min"]), 
+    form_args = dict(timeframe=dict(default="15min", choices=["15min", "5min", "30min", "1hour", "4hour"]), 
                      trade_volume=dict(default="Dollar", choices=['Dollar', 'Percent']),
                      use_all_symbols=dict(default="user_symbols", choices=["user_symbols", "All_symbols"]))
     form_overrides =  dict(timeframe=wtforms.SelectField, use_all_symbols=wtforms.SelectField, trade_volume=wtforms.SelectField)

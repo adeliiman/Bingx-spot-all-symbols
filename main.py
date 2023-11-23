@@ -120,6 +120,7 @@ def new_trade(items):
 			if last_kline_percent > Bingx.best_symbol.get('percent', 0):
 				Bingx.best_symbol['percent'] = last_kline_percent
 				Bingx.best_symbol['symbol'] = symbol
+				Bingx.best_symbol['price'] = price
 				logger.info(f"set best symbol: {symbol}---{last_kline_percent}")
 		elif signal == "Sell":
 			
@@ -144,9 +145,6 @@ def schedule_signal():
 		if Bingx.use_all_symbols == "All_symbols": 
 			symbols = Bingx.All_symbols
 
-		qty = Bingx._try(method='getBalance')
-		Bingx.balance = qty['balances']
-
 		min_ = time.gmtime().tm_min
 		tf = None
 
@@ -164,26 +162,35 @@ def schedule_signal():
 			tf = '4h'
 
 		if tf:
+			qty = Bingx._try(method='getBalance')
+			Bingx.balance = qty['balances']
+
 			with concurrent.futures.ThreadPoolExecutor(max_workers=len(symbols)+1) as executor:
 				items = [(sym, f'{tf}') for sym in symbols]
 				executor.map(new_trade, items)
 			
-			if Bingx.best_symbol:
-				logger.info(f"Buying {Bingx.best_symbol['symbol']} ... ... ...")
-				if Bingx.trade_volume == "Dollar":
-					qty = Bingx.trade_value
-				else:
-					qty = Bingx._try(method='getBalance')
-					qty = qty['balances']
-					_qty = 0
-					for q in qty:
-						if q['asset'] == "USDT":
-							_qty = float(q['free']) * Bingx.trade_percent / 100
-							break
-					qty = _qty
-				res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=qty)
-				logger.info(f"buy order: {Bingx.best_symbol['symbol']}, quantity: {qty}---{Bingx.best_symbol['percent']}")
-				Bingx.best_symbol = {}
+			if not Bingx.best_symbol:
+				logger.info("nothing best symbol")
+				return None
+			
+			logger.info(f"Buying {Bingx.best_symbol['symbol']} ... ... ...")
+			qty = Bingx.balance
+			_qty = 0
+			for q in qty:
+				if q['asset'] == "USDT":
+					_qty = float(q['free']) * Bingx.trade_percent / 100
+				elif q['asset'] == Bingx.best_symbol['symbol']:
+					balance = float(q['free'])
+			if balance * Bingx.best_symbol['price'] > 5:
+				logger.info(f"we have volume on {Bingx.best_symbol['symbol']}")
+				return None
+			qty = _qty
+			if Bingx.trade_volume == "Dollar":
+				qty = Bingx.trade_value
+
+			res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=qty)
+			logger.info(f"buy order: {Bingx.best_symbol['symbol']}, quantity: {qty}---{Bingx.best_symbol['percent']}")
+			Bingx.best_symbol = {}
 	except Exception as e:
 		logger.exception(str(e))
 
