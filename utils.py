@@ -20,9 +20,9 @@ def Ma_Ribbon(close, length1=40, length2=60, length3=80, length4=100):
         def cond_buy(i):
             ema1.values[-i] > ema2.values[-i] > ema3.values[-i] > ema4.values[-i]
         
-        if cond_sell(1) and not cond_sell(2):
+        if cond_sell(1):
             signal = "Short"
-        elif cond_buy(1) and not cond_buy(2):
+        elif cond_buy(1):
             signal = "Long"
         
         return  [signal, ema1.values[-1], ema2.values[-1], ema3.values[-1], ema4.values[-1] ]
@@ -70,9 +70,9 @@ def Chandelier_Exit(df, length=22, mult=3):
         df = df.round(decimals = 4)
         # print(df.tail(10))
         signal = None
-        if df['dir'].iloc[-1] == 1 and df['dir'].iloc[-2] == -1:
+        if df['dir'].iloc[-1] == 1:# and df['dir'].iloc[-2] == -1:
             signal = 'Buy'
-        elif df['dir'].iloc[-1] == -1 and df['dir'].iloc[-2] == 1:
+        elif df['dir'].iloc[-1] == -1:# and df['dir'].iloc[-2] == 1:
             signal = 'Sell'
         
         del df

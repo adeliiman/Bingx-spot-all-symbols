@@ -100,7 +100,7 @@ def get_signal(symbol:str, interval):
 
 	if signal_chandelier == "Buy" and signal_ribbon[0] == "Buy" and last_kline_percent > 0 and over_ema_lines:
 		signal = "Buy"
-	elif signal_chandelier == "Sell" or (klines['close'].values[-1] < ribbon[2] and klines['open'].values[-1] < ribbon[2]):
+	elif signal_chandelier == "Sell" or (klines['close'].iat[-1] < ribbon[2] and klines['open'].iat[-1] < ribbon[2]):
 		signal = "Sell"
 	
 	logger.info(msg=f"signal: {symbol}: {signal}  ,last_kline_percent: {last_kline_percent}")
