@@ -23,7 +23,7 @@ Base.metadata.create_all(bind=engine)
 async def lifespan(app: FastAPI):
     get_db()
     
-    threading.Thread(target=start_bingx_ws).start()
+    #threading.Thread(target=start_bingx_ws).start()
     yield
     Bingx.ws = False
 

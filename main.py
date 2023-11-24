@@ -108,6 +108,22 @@ def get_signal(symbol:str, interval):
 	return signal, last_kline_percent, klines['close'].iat[-1]
 
 
+def add_to_sqlite(pair, price, direction, quantity):
+	try:
+		signal = Signal()
+		signal.symbol = pair
+		signal.price = price
+		signal.side = direction
+		signal.qty = quantity
+		event_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		signal.time = event_time
+		db = SessionLocal()
+		db.add(signal)
+		db.commit()
+		db.close()
+		logger.info(msg=f"add order to sqlite: {pair}-{price}-{direction}-{quantity}-{event_time}")
+	except Exception as e:
+		logger.exception(msg="add signal: "+ str(e))
 
 def new_trade(items):
 	try:
@@ -134,6 +150,9 @@ def new_trade(items):
 			if _qty and price*_qty>2:
 				res = Bingx._try(method="newOrder", symbol=symbol, side='SELL', qty=_qty)
 				logger.info(f"sell order {symbol}---{_qty}-dollar")
+				if not res:
+					return None
+				add_to_sqlite(pair=symbol, price=price, direction='Sell', quantity=_qty)
 
 	except Exception as e:
 		logger.exception(str(e))
@@ -193,6 +212,9 @@ def schedule_signal():
 			res = Bingx._try(method="newOrder", symbol=Bingx.best_symbol['symbol'], side='BUY', quoteQty=qty)
 			logger.info(f"buy order: {Bingx.best_symbol['symbol']}, quantity: {qty}---{Bingx.best_symbol['percent']}")
 			Bingx.best_symbol = {}
+			if not res:
+				return None
+			add_to_sqlite(pair=Bingx.best_symbol['symbol'], price=Bingx.best_symbol['price'], direction='Buy', quantity=qty)
 	except Exception as e:
 		logger.exception(str(e))
 
