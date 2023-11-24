@@ -20,20 +20,22 @@ class Setting(Base):
     ma4 = Column(Integer)
     chandelier_length = Column(Integer)
     chandelier_multi = Column(Integer)
-    use_all_symbols = Column(String)
+    use_symbols = Column(String)
+    ema_offset = Column(Integer)
+    ema_percent = Column(Float)
 
 
 class SettingAdmin(ModelView, model=Setting):
     #form_columns = [User.name]
     column_list = [Setting.id, Setting.timeframe, Setting.trade_value, Setting.trade_percent, Setting.trade_volume,Setting.ma1, Setting.ma2, Setting.ma3, Setting.ma4,
-                    Setting.chandelier_length, Setting.chandelier_multi, Setting.use_all_symbols]
+                    Setting.chandelier_length, Setting.chandelier_multi, Setting.use_symbols, Setting.ema_offset, Setting.ema_percent]
     name = "user setting"
     name_plural = "Setting"
     icon = "fa-solid fa-user"
     form_args = dict(timeframe=dict(default="15min", choices=["15min", "5min", "30min", "1hour", "4hour"]), 
                      trade_volume=dict(default="Dollar", choices=['Dollar', 'Percent']),
-                     use_all_symbols=dict(default="user_symbols", choices=["user_symbols", "All_symbols"]))
-    form_overrides =  dict(timeframe=wtforms.SelectField, use_all_symbols=wtforms.SelectField, trade_volume=wtforms.SelectField)
+                     use_symbols=dict(default="user_symbols", choices=["user_symbols", "All_symbols"]))
+    form_overrides =  dict(timeframe=wtforms.SelectField, use_symbols=wtforms.SelectField, trade_volume=wtforms.SelectField)
 
     async def on_model_change(self, data, model, is_created):
         # Perform some other action
@@ -81,6 +83,8 @@ class Symbols(Base):
 
 class SymbolAdmin(ModelView, model=Symbols):
     column_list = [Symbols.id, Symbols.symbol]
+    column_sortable_list = [Symbols.symbol]
+    column_searchable_list = [Symbols.symbol]
     name = "Symbol"
     sname_plural = "user Symbol"
     icon = "fa-sharp fa-solid fa-bitcoin-sign"

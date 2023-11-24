@@ -1,8 +1,9 @@
 import pandas_ta as ta
 from sqlalchemy.orm import Session
 from models import Setting, Symbols, AllSymbols, Signal
-
 from setLogger import get_logger
+
+
 
 logger = get_logger(__name__)
 
@@ -14,10 +15,10 @@ def Ma_Ribbon(close, length1=40, length2=60, length3=80, length4=100):
         ema3 = ta.ma(name='ema', source=close, length=length3) # yellow
         ema4 = ta.ma(name='ema', source=close, length=length4) # red
         signal = None
-        
+        from main import Bingx
         if ema1.iat[-1] < ema2.iat[-1] < ema3.iat[-1] < ema4.iat[-1]:
             signal = "Sell"
-        elif ema1.iat[-1] > ema2.iat[-1] > ema3.iat[-1] > ema4.iat[-1]:
+        elif ema1.iat[-1] > ema2.iat[-1] > ema3.iat[-1] > ema4.iat[-1] and ((ema1.iat[-1] > (Bingx.ema_percent/100 + 1)*ema1.iat[-Bingx.ema_offset])):
             signal = "Buy"
         
         return  [signal, ema1.iat[-1], ema2.iat[-1], ema3.iat[-1], ema4.iat[-1] ]
@@ -92,7 +93,9 @@ def get_user_params(db: Session):
         Bingx.trade_percent = user.trade_percent
         Bingx.trade_volume = user.trade_volume
         Bingx.timeframe = user.timeframe
-        Bingx.use_all_symbols = user.use_all_symbols
+        Bingx.use_all_symbols = user.use_symbols
+        Bingx.ema_offset = user.ema_offset
+        Bingx.ema_percent = user.ema_percent
         for sym in user_symbols:
             Bingx.user_symbols.append(sym.symbol)
 

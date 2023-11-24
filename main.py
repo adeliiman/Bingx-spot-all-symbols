@@ -39,6 +39,8 @@ class Bingx:
 	timeframe: str = '15min'
 	best_symbol: dict = {}
 	balance: list = []
+	ema_offset: int = 10
+	ema_percent: float = 0.1
 
 
 	def _try(self, method:str, **kwargs):
